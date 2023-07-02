@@ -4,9 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import tLogistic.Repository.ArticleRepository;
-import tLogistic.Repository.ClientRepository;
-import tLogistic.models.Article;
+import tLogistic.repositories.ArticleRepository;
+import tLogistic.repositories.ClientRepository;
 import tLogistic.models.Client;
 
 @Controller

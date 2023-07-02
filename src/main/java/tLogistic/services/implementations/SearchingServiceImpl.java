@@ -8,15 +8,14 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import tLogistic.Repository.ArticleRepository;
-import tLogistic.Repository.ClientRepository;
+import tLogistic.repositories.ArticleRepository;
+import tLogistic.repositories.ClientRepository;
 import tLogistic.models.Article;
 import tLogistic.models.Client;
 import tLogistic.services.SearchingService;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;

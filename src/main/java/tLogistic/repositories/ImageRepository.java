@@ -1,4 +1,4 @@
-package tLogistic.Repository;
+package tLogistic.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import tLogistic.models.Image;

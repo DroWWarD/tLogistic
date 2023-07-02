@@ -3,7 +3,7 @@ package tLogistic.services.implementations;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
-import tLogistic.Repository.ClientRepository;
+import tLogistic.repositories.ClientRepository;
 import tLogistic.models.Client;
 import tLogistic.services.ClientService;
 
