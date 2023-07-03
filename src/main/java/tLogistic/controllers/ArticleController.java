@@ -23,15 +23,15 @@ public class ArticleController {
     }
 
     @GetMapping("/addArticleXLSX")
-    public String addArticleXlsx(Model model) {
+    public String showAddXlsxForm(Model model) {
         return articleService.showAddXlsxForm(model);
     }
 
     @PostMapping("/addArticleXLSX")
-    public String parseXLSX(@RequestParam(required = false) Long clientId,
-                            @RequestParam("file") MultipartFile file,
-                            Model model) throws IOException, InvalidFormatException {
-        return articleService.parseXLSX(clientId ,file, model);
+    public String addArticlesFromXlsx(@RequestParam(required = false) Long clientId,
+                                      @RequestParam("file") MultipartFile file,
+                                      Model model) throws IOException, InvalidFormatException {
+        return articleService.addArticlesFromXlsx(clientId ,file, model);
     }
 
     @PostMapping("/addArticle")

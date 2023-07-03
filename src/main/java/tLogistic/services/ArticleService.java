@@ -19,9 +19,7 @@ public interface ArticleService {
 
     String showDetails(Long id, Model model);
 
-    String findArticlesList(Long clientId, String articles, Model model) throws Exception;
-
-    String parseXLSX(Long clientId, MultipartFile file, Model model) throws IOException, InvalidFormatException;
+    String addArticlesFromXlsx(Long clientId, MultipartFile file, Model model) throws IOException, InvalidFormatException;
 
     String showAddForm(Model model);
 

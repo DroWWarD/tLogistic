@@ -1,7 +1,5 @@
 package tLogistic.services.implementations;
 
-import com.aspose.cells.Workbook;
-import com.aspose.cells.Worksheet;
 import lombok.RequiredArgsConstructor;
 import net.bytebuddy.utility.RandomString;
 import org.springframework.stereotype.Service;
@@ -136,42 +134,7 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public String findArticlesList(Long clientId, String articles, Model model) throws Exception {
-        articles = articles.trim();
-        if (clientId == null) {
-            return "articleSearchErrorNoClient";
-        }
-        List<Article> result = new ArrayList<>();
-        String[] articlesFromRequest = articles.split(" ");
-        Optional<Client> optionalClient = clientRepository.findById(clientId);
-        if (optionalClient.isPresent()) {
-            Client client = optionalClient.get();
-            for (int i = 0; i < articlesFromRequest.length; i++) {
-                result.addAll(articleRepository.findAllByArticleAndClient(articlesFromRequest[i], client));
-            }
-            Workbook workbook = new Workbook();
-            Worksheet worksheet = workbook.getWorksheets().get(0);
-            if (!result.isEmpty()) {
-                for (int i = 0; i < result.size(); i++) {
-                    Article article = result.get(i);
-                    worksheet.getCells().get(i, 0).putValue(article.getArticle());
-                    worksheet.getCells().get(i, 1).putValue(article.getDescription());
-                    worksheet.getCells().get(i, 2).putValue(article.getCode());
-                    worksheet.getCells().get(i, 3).putValue(article.getSupportingDoc());
-                }
-            }
-            File tempFile = File.createTempFile("temp", RandomString.make() + ".xlsx");
-            workbook.save(String.valueOf(tempFile));
-            model.addAttribute("file", tempFile);
-            model.addAttribute("client", client);
-            model.addAttribute("articles", result);
-            return "articleSearchResult";
-        }
-        return "articleSearchErrorNoClient";
-    }
-
-    @Override
-    public String parseXLSX(Long clientId, MultipartFile file, Model model) throws IOException{
+    public String addArticlesFromXlsx(Long clientId, MultipartFile file, Model model) throws IOException {
         if (clientId == null) {
             return "articleSearchErrorNoClient";
         }
@@ -179,25 +142,39 @@ public class ArticleServiceImpl implements ArticleService {
         if (optionalClient.isEmpty()) {
             return "articleSearchErrorNoClient";
         }
-        Client client = optionalClient.get();
         String fileName = file.getOriginalFilename();
-        assert fileName != null;
-        var extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+        if (fileName == null || file.isEmpty() || fileName.isBlank()) {
+            return "xlsxError";
+        }
+        String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
         if (!extension.equals("xlsx")) {
             return "fileExtensionError";
         }
+        List<Article> articlesAddedToDB = new ArrayList<>();
+        List<Article> articlesAlreadyInBase = new ArrayList<>();
+        try {
+            parseFileAndFillArticleLists(articlesAddedToDB, articlesAlreadyInBase, clientId, file);
+        } catch (Exception e) {
+            return "xlsxError";
+        }
+
+        if (!articlesAlreadyInBase.isEmpty()) {
+            model.addAttribute("articles", articlesAlreadyInBase);
+            return "addArticleXLSXError";
+        }
+        articleRepository.saveAll(articlesAddedToDB);
+        model.addAttribute("articles", articlesAddedToDB);
+        return "addArticleXLSXOk";
+    }
+
+    private void parseFileAndFillArticleLists(List<Article> articlesAddedToDB, List<Article> articlesAlreadyInBase, Long clientId, MultipartFile file) throws IOException {
         File tempFile = File.createTempFile("searchResult", RandomString.make() + ".xlsx");
+        Client client = clientRepository.findById(clientId).get();
         file.transferTo(tempFile);
         tempFile.deleteOnExit();
         ExcelReader excelReader = new ExcelReader();
         HashMap<Integer, List<Object>> rows;
-        try {
-            rows = excelReader.read(String.valueOf(tempFile));
-        } catch (Exception e) {
-            return "xlsxError";
-        }
-        List<Article> articles = new ArrayList<>();
-        List<Article> articlesAlreadyInBase = new ArrayList<>();
+        rows = excelReader.read(String.valueOf(tempFile));
         for (List<Object> row : rows.values()) {
             Article art;
             String article = row.get(0).toString().trim();
@@ -211,15 +188,8 @@ public class ArticleServiceImpl implements ArticleService {
                 articlesAlreadyInBase.add(articlesInBase.get(0));
                 continue;
             }
-            articles.add(art);
+            articlesAddedToDB.add(art);
         }
-        if (!articlesAlreadyInBase.isEmpty()) {
-            model.addAttribute("articles", articlesAlreadyInBase);
-            return "addArticleXLSXError";
-        }
-        articleRepository.saveAll(articles);
-        model.addAttribute("articles", articles);
-        return "addArticleXLSXOk";
     }
 
     @Override
