@@ -11,10 +11,16 @@
 <header th:insert="blocks/header :: header" class="p-3 text-bg-dark"></header>
 <div class="container mt-5 mb-5">
   <h1 th:text="'Редактирование артикула ' + ${article.article}"></h1>
-  <form method="post">
+  <form method="post" enctype="multipart/form-data">
     <textarea name="description" placeholder="Введите описание товара" class="form-control" th:text="${article.description}"></textarea><br>
     <input type="text" th:value="${article.code}" name="code" placeholder="Введите код ТНВЭД" class="form-control"><br>
     <textarea name="supportingDoc" placeholder="Введите названия сопроводительных документов" class="form-control" th:text="${article.supportingDoc}"></textarea><br>
+    <div>
+      <img th:src="${article.imagePath != null} ? '/images/' + ${article.imagePath} : '/images/error.png'" alt=" Изображение отсутствует"><br>
+    </div><br>
+    <div>
+      <input type="file" name="file" class="btn btn-warning"><b> Изменить изображение</b>
+    </div><br>
     <button type="submit" class="btn btn-success">Обновить артикул</button>
   </form>
 </div>

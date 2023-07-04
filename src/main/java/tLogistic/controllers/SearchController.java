@@ -5,14 +5,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tLogistic.repositories.ImageRepository;
 import tLogistic.services.SearchingService;
 
 
 @RestController
 @RequiredArgsConstructor
 public class SearchController {
-    private final ImageRepository imageRepository;
     @Autowired
     private final SearchingService searchingService;
 

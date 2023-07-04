@@ -7,10 +7,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.multipart.MultipartFile;
 import tLogistic.repositories.ArticleRepository;
 import tLogistic.repositories.ClientRepository;
-import tLogistic.repositories.ImageRepository;
 import tLogistic.models.Article;
 import tLogistic.models.Client;
-import tLogistic.models.Image;
 import tLogistic.services.ArticleService;
 import tLogistic.utils.ExcelReader;
 
@@ -22,7 +20,7 @@ import java.util.*;
 public class ArticleServiceImpl implements ArticleService {
     private final ArticleRepository articleRepository;
     private final ClientRepository clientRepository;
-    private final ImageRepository imageRepository;
+    String uploadPath = "C:/JAVA/tLogistic/src/main/resources/images";
 
     @Override
     public String addArticle(String article, String description, String code, String supportingDoc, MultipartFile file, String clientName) throws IOException {
@@ -44,11 +42,12 @@ public class ArticleServiceImpl implements ArticleService {
             return "articleAddExistError";
         }
         Article art = new Article(article, description, code, supportingDoc);
-        Image image;
         if (!file.isEmpty()) {
-            image = toImageEntity(file);
-            image.setPreviewImage(true);
-            art.addImageToArticle(image);
+            File uploadDir = new File(uploadPath);
+            String uuidFile = UUID.randomUUID().toString();
+            String resultFileName = uuidFile + "." + file.getOriginalFilename();
+            file.transferTo(new File(uploadDir + "/" + resultFileName));
+            art.setImagePath(resultFileName);
         }
         art.setClient(client);
         clientRepository.save(client);
@@ -56,31 +55,36 @@ public class ArticleServiceImpl implements ArticleService {
         return "articleAddOk";
     }
 
-    private Image toImageEntity(MultipartFile file) throws IOException {
-        Image image = new Image();
-        image.setName(file.getName());
-        image.setOriginalFileName(file.getOriginalFilename());
-        image.setContentType(file.getContentType());
-        image.setSize(file.getSize());
-        image.setBytes(file.getBytes());
-        return image;
-    }
-
     @Override
-    public String edit(Long id, String description, String code, String supportingDoc, Model model) {
+    public String edit(Long id, String description, String code, String supportingDoc, Model model, MultipartFile file) throws IOException {
         description = description.trim();
         code = code.trim();
         supportingDoc = supportingDoc.trim();
         Optional<Article> optionalArticle = articleRepository.findById(id);
-        if (optionalArticle.isPresent()) {
-            Article art = optionalArticle.get();
-            art.setDescription(description);
-            art.setCode(code);
-            art.setSupportingDoc(supportingDoc);
-            articleRepository.save(art);
-            return "articleAddOk";
+        if (optionalArticle.isEmpty()) {
+            return "articleSearchError";
         }
-        return "articleSearchError";
+        Article article = optionalArticle.get();
+        article.setDescription(description);
+        article.setCode(code);
+        article.setSupportingDoc(supportingDoc);
+        if (!file.isEmpty()) {
+            File uploadDir = new File(uploadPath);
+            if (article.getImagePath() != null) {
+                File removedImage = new File(uploadPath + "/" + article.getImagePath());
+                if (!removedImage.delete()){
+                    System.out.println("Не удалось удалить файл " + removedImage);
+                }
+            }
+            String uuidFile = UUID.randomUUID().toString();
+            String resultFileName = uuidFile + "." + file.getOriginalFilename();
+            file.transferTo(new File(uploadDir + "/" + resultFileName));
+            article.setImagePath(resultFileName);
+        }
+        articleRepository.save(article);
+        model.addAttribute("title", "Детализация артикула " + article.getArticle());
+        model.addAttribute("article", optionalArticle.get());
+        return "articleDetails";
     }
 
     @Override
@@ -96,29 +100,37 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Override
     public String findRemove(Long id, Model model) {
-        if (!articleRepository.existsById(id)) {
+        Optional<Article> optionalArticle = articleRepository.findById(id);
+        if (optionalArticle.isEmpty()) {
             return "articleSearchError";
         }
-        Article article = articleRepository.findById(id).get();
+        Article article = optionalArticle.get();
         model.addAttribute("article", article);
         return "articleRemove";
     }
 
     @Override
-    public String removeArticle(Long id, String article, Model model) {
-        article = article.trim();
-        if (!articleRepository.existsById(id)) {
+    public String removeArticle(Long id, String articleName, Model model) {
+        articleName = articleName.trim();
+        Optional<Article> optionalArticle = articleRepository.findById(id);
+        if (optionalArticle.isEmpty()) {
             return "articleSearchError";
         }
-        Article art = articleRepository.findById(id).get();
-        if (art.getArticle().equals(article)) {
-            articleRepository.delete(art);
+        Article article = optionalArticle.get();
+        if (article.getArticle().equals(articleName)) {
+            if (article.getImagePath() != null) {
+                File removedImage = new File(uploadPath + "/" + article.getImagePath());
+                if(!removedImage.delete()){
+                    System.out.println("Не удалось удалить файл " + removedImage);
+                }
+            }
+            articleRepository.delete(article);
             return "articleAddOk";
         } else return "articleSearchError";
     }
 
     @Override
-    public String showDetails(Long id, Model model) {
+    public String showDetails(Long id, Model model){
         if (!articleRepository.existsById(id)) {
             return "articleSearchError";
         }
@@ -134,7 +146,7 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public String addArticlesFromXlsx(Long clientId, MultipartFile file, Model model) throws IOException {
+    public String addArticlesFromXlsx(Long clientId, MultipartFile file, Model model){
         if (clientId == null) {
             return "articleSearchErrorNoClient";
         }
@@ -152,8 +164,9 @@ public class ArticleServiceImpl implements ArticleService {
         }
         List<Article> articlesAddedToDB = new ArrayList<>();
         List<Article> articlesAlreadyInBase = new ArrayList<>();
+        Client client = optionalClient.get();
         try {
-            parseFileAndFillArticleLists(articlesAddedToDB, articlesAlreadyInBase, clientId, file);
+            parseFileAndFillArticleLists(articlesAddedToDB, articlesAlreadyInBase, client, file);
         } catch (Exception e) {
             return "xlsxError";
         }
@@ -167,9 +180,8 @@ public class ArticleServiceImpl implements ArticleService {
         return "addArticleXLSXOk";
     }
 
-    private void parseFileAndFillArticleLists(List<Article> articlesAddedToDB, List<Article> articlesAlreadyInBase, Long clientId, MultipartFile file) throws IOException {
+    private void parseFileAndFillArticleLists(List<Article> articlesAddedToDB, List<Article> articlesAlreadyInBase, Client client, MultipartFile file) throws IOException {
         File tempFile = File.createTempFile("searchResult", RandomString.make() + ".xlsx");
-        Client client = clientRepository.findById(clientId).get();
         file.transferTo(tempFile);
         tempFile.deleteOnExit();
         ExcelReader excelReader = new ExcelReader();

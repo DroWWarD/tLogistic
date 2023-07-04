@@ -23,9 +23,7 @@
             <th scope="col">Удаление</th>
         </tr>
         </thead>
-
         <tbody>
-
         <th th:text="${article.article}" scope="row"></th>
         <td th:text="${article.description}"></td>
         <td th:text="${article.code}"></td>
@@ -34,8 +32,10 @@
         <td><a th:href="'/articleDetails/' + ${article.id} + '/edit'" class="btn btn-warning">Редактировать</a></td>
         <td><a th:href="'/articleDetails/' + ${article.id} + '/remove'" class="btn btn-warning">Удалить</a></td>
         </tbody>
-    </table>
-    <img src="data:image/png;base64,#{imageString}">
+    </table><br>
+    <div>
+        <img th:src="${article.imagePath != null} ? '/images/' + ${article.imagePath} : '/images/error.png'" alt=" Изображение отсутствует"><br>
+    </div><br>
 </div>
 <div th:insert="blocks/footer :: footer" id="footer"></div>
 </body>
