@@ -7,8 +7,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+
 
 @Entity
 @Data
@@ -26,9 +25,7 @@ public class Article {
     private String code;
     @Column(columnDefinition = "mediumtext", nullable = false)
     private String supportingDoc;
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "article")
-    private List<Image> images = new ArrayList<>();
-    private Long imageId;
+    private String imagePath;
     @ManyToOne(cascade = CascadeType.REFRESH, fetch = FetchType.EAGER)
     private Client client;
     private LocalDateTime dateOfCreated;
@@ -44,9 +41,5 @@ public class Article {
         this.code = code;
         this.supportingDoc = supportingDoc;
     }
-    public void addImageToArticle(Image image){
-        image.setArticle(this);
-        images.add(image);
-        imageId = image.getId();
-    }
+
 }

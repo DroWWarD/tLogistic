@@ -46,7 +46,7 @@ public class ArticleController {
     }
 
     @GetMapping("/articleDetails/{id}")
-    public String articleDetails(@PathVariable(value = "id") Long id, Model model) {
+    public String articleDetails(@PathVariable(value = "id") Long id, Model model) throws IOException {
         return articleService.showDetails(id, model);
     }
     @GetMapping("/articleDetails/{id}/edit")
@@ -58,8 +58,9 @@ public class ArticleController {
                               @RequestParam String description,
                               @RequestParam String code,
                               @RequestParam String supportingDoc,
-                              Model model) {
-        return articleService.edit(id, description, code, supportingDoc, model);
+                              @RequestParam (required = false) MultipartFile file,
+                              Model model) throws IOException {
+        return articleService.edit(id, description, code, supportingDoc, model, file);
     }
     @GetMapping("/articleDetails/{id}/remove")
     public String articleRemoveSearch(@PathVariable(value = "id") Long id, Model model) {

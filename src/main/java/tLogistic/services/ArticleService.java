@@ -9,7 +9,7 @@ import java.io.IOException;
 public interface ArticleService {
     String addArticle(String article, String description, String code, String supportingDoc, MultipartFile file, String clientName) throws IOException;
 
-    String edit(Long id, String description, String code, String supportingDoc, Model model);
+    String edit(Long id, String description, String code, String supportingDoc, Model model, MultipartFile file) throws IOException;
 
     String findEdit(Long id, Model model);
 
@@ -17,7 +17,7 @@ public interface ArticleService {
 
     String removeArticle(Long id, String article, Model model);
 
-    String showDetails(Long id, Model model);
+    String showDetails(Long id, Model model) throws IOException;
 
     String addArticlesFromXlsx(Long clientId, MultipartFile file, Model model) throws IOException, InvalidFormatException;
 

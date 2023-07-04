@@ -1,30 +1,24 @@
 package tLogistic.controllers;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.http.MediaType;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
-import tLogistic.repositories.ImageRepository;
-import tLogistic.models.Image;
+import org.springframework.web.bind.annotation.*;
 
-import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 
 @RestController
 @RequiredArgsConstructor
 public class ImageController {
-    private final ImageRepository imageRepository;
+    String uploadPath = "C:/JAVA/tLogistic/src/main/resources/images/";
 
-    @GetMapping("/images/{id}")
-    private ResponseEntity<?> getImageById(@PathVariable Long id){
-        Image image = imageRepository.findById(id).orElse(null);
-        assert image != null;
-        return  ResponseEntity.ok()
-                .header("fileName", image.getOriginalFileName())
-                .contentType(MediaType.valueOf(image.getContentType()))
-                .contentLength(image.getSize())
-                .body(new InputStreamResource(new ByteArrayInputStream(image.getBytes())));
+    @GetMapping("/images/{fileName}")
+    private ResponseEntity<ByteArrayResource> findAImage(@PathVariable(value = "fileName") String fileName) throws Exception {
+        try (FileInputStream fis = new FileInputStream(uploadPath + fileName)) {
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                    .body(new ByteArrayResource(fis.readAllBytes()));
+        }
     }
 }
