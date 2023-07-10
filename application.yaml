@@ -12,8 +12,14 @@ spring:
         enable_lazy_load_no_trans: true
     hibernate:
       ddl-auto: update
+      jdbc:
+        batch_size: 100
     show-sql: true
   servlet:
     multipart:
       max-file-size: 128000KB
       max-request-size: 128000KB
+  security:
+    user:
+      name: madmax
+      password: 2649

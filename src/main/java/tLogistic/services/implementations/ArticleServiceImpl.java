@@ -23,13 +23,13 @@ public class ArticleServiceImpl implements ArticleService {
     String uploadPath = "C:/JAVA/tLogistic/src/main/resources/images";
 
     @Override
-    public String addArticle(String article, String description, String code, String supportingDoc, MultipartFile file, String clientName) throws IOException {
-        article = article.trim();
+    public String addArticle(String articleName, String description, String code, String supportingDoc, MultipartFile file, String clientName, Model model) throws IOException {
+        articleName = articleName.trim();
         description = description.trim();
         code = code.trim();
         supportingDoc = supportingDoc.trim();
         clientName = clientName.trim();
-        if (article.isBlank() || description.isBlank() || code.isBlank() || clientName.isBlank()) {
+        if (articleName.isBlank() || description.isBlank() || !code.matches("\\d{10}") || clientName.isBlank()) {
             return "articleAddError";
         }
         List<Client> clientInBase = clientRepository.findByName(clientName);
@@ -37,22 +37,24 @@ public class ArticleServiceImpl implements ArticleService {
             return "clientSearchError";
         }
         Client client = clientInBase.get(0);
-        List<Article> articleAlreadyInBase = articleRepository.findAllByArticleAndClient(article, clientInBase.get(0));
+        List<Article> articleAlreadyInBase = articleRepository.findAllByArticleAndClient(articleName, clientInBase.get(0));
         if (!articleAlreadyInBase.isEmpty()) {
             return "articleAddExistError";
         }
-        Article art = new Article(article, description, code, supportingDoc);
+        Article article = new Article(articleName, description, code, supportingDoc);
         if (!file.isEmpty()) {
             File uploadDir = new File(uploadPath);
             String uuidFile = UUID.randomUUID().toString();
             String resultFileName = uuidFile + "." + file.getOriginalFilename();
             file.transferTo(new File(uploadDir + "/" + resultFileName));
-            art.setImagePath(resultFileName);
+            article.setImagePath(resultFileName);
         }
-        art.setClient(client);
+        article.setClient(client);
         clientRepository.save(client);
-        articleRepository.save(art);
-        return "articleAddOk";
+        articleRepository.save(article);
+        model.addAttribute("title", "Детализация артикула " + article.getArticle());
+        model.addAttribute("article", article);
+        return "articleDetails";
     }
 
     @Override
@@ -64,6 +66,9 @@ public class ArticleServiceImpl implements ArticleService {
         if (optionalArticle.isEmpty()) {
             return "articleSearchError";
         }
+        if (description.isBlank() || !code.matches("\\d{10}")) {
+            return "articleAddError";
+        }
         Article article = optionalArticle.get();
         article.setDescription(description);
         article.setCode(code);
@@ -72,7 +77,7 @@ public class ArticleServiceImpl implements ArticleService {
             File uploadDir = new File(uploadPath);
             if (article.getImagePath() != null) {
                 File removedImage = new File(uploadPath + "/" + article.getImagePath());
-                if (!removedImage.delete()){
+                if (!removedImage.delete()) {
                     System.out.println("Не удалось удалить файл " + removedImage);
                 }
             }
@@ -120,7 +125,7 @@ public class ArticleServiceImpl implements ArticleService {
         if (article.getArticle().equals(articleName)) {
             if (article.getImagePath() != null) {
                 File removedImage = new File(uploadPath + "/" + article.getImagePath());
-                if(!removedImage.delete()){
+                if (!removedImage.delete()) {
                     System.out.println("Не удалось удалить файл " + removedImage);
                 }
             }
@@ -130,7 +135,7 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public String showDetails(Long id, Model model){
+    public String showDetails(Long id, Model model) {
         if (!articleRepository.existsById(id)) {
             return "articleSearchError";
         }
@@ -146,10 +151,7 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public String addArticlesFromXlsx(Long clientId, MultipartFile file, Model model){
-        if (clientId == null) {
-            return "articleSearchErrorNoClient";
-        }
+    public String addArticlesFromXlsx(Long clientId, MultipartFile file, Model model) {
         Optional<Client> optionalClient = clientRepository.findById(clientId);
         if (optionalClient.isEmpty()) {
             return "articleSearchErrorNoClient";
@@ -164,15 +166,16 @@ public class ArticleServiceImpl implements ArticleService {
         }
         List<Article> articlesAddedToDB = new ArrayList<>();
         List<Article> articlesAlreadyInBase = new ArrayList<>();
+        List<Article> errors = new ArrayList<>();
         Client client = optionalClient.get();
         try {
-            parseFileAndFillArticleLists(articlesAddedToDB, articlesAlreadyInBase, client, file);
+            parseFileAndFillArticleLists(errors, articlesAddedToDB, articlesAlreadyInBase, client, file);
         } catch (Exception e) {
             return "xlsxError";
         }
-
-        if (!articlesAlreadyInBase.isEmpty()) {
+        if (!articlesAlreadyInBase.isEmpty() || !errors.isEmpty()) {
             model.addAttribute("articles", articlesAlreadyInBase);
+            model.addAttribute("errors", errors);
             return "addArticleXLSXError";
         }
         articleRepository.saveAll(articlesAddedToDB);
@@ -180,24 +183,32 @@ public class ArticleServiceImpl implements ArticleService {
         return "addArticleXLSXOk";
     }
 
-    private void parseFileAndFillArticleLists(List<Article> articlesAddedToDB, List<Article> articlesAlreadyInBase, Client client, MultipartFile file) throws IOException {
+    private void parseFileAndFillArticleLists(List<Article> errors, List<Article> articlesAddedToDB, List<Article> articlesAlreadyInBase, Client client, MultipartFile file) throws IOException {
         File tempFile = File.createTempFile("searchResult", RandomString.make() + ".xlsx");
         file.transferTo(tempFile);
         tempFile.deleteOnExit();
         ExcelReader excelReader = new ExcelReader();
         HashMap<Integer, List<Object>> rows;
         rows = excelReader.read(String.valueOf(tempFile));
+        Iterable<Article> articlesInBase = articleRepository.findAllByClient(client);
+        Map<String, Article> articlesInBaseMap = new HashMap<>();
+        for (Article a : articlesInBase) {
+            articlesInBaseMap.put(a.getArticle(), a);
+        }
         for (List<Object> row : rows.values()) {
             Article art;
             String article = row.get(0).toString().trim();
-            String description = row.get(1).toString();
-            String code = row.get(2).toString();
-            String supportingDoc = row.size() > 3 ? row.get(3).toString() : " ";
+            if (articlesInBaseMap.containsKey(article)) {
+                articlesAlreadyInBase.add(articlesInBaseMap.get(article));
+                continue;
+            }
+            String description = row.get(1).toString().trim();
+            String code = row.get(2).toString().trim().matches("\\d{10}") ? row.get(2).toString().trim() : "Ошибка:\n" + row.get(2).toString().trim();
+            String supportingDoc = row.size() > 3 ? row.get(3).toString() : "";
             art = new Article(article, description, code, supportingDoc);
             art.setClient(client);
-            List<Article> articlesInBase = articleRepository.findAllByArticleAndClient(article, client);
-            if (!articlesInBase.isEmpty()) {
-                articlesAlreadyInBase.add(articlesInBase.get(0));
+            if (article.isBlank() || description.isBlank() || !code.matches("\\d{10}")) {
+                errors.add(art);
                 continue;
             }
             articlesAddedToDB.add(art);
