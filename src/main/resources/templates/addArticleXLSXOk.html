@@ -11,6 +11,7 @@
 <header th:insert="blocks/header :: header" class="p-3 text-bg-dark"></header>
 <div class="container mt-5 mb-5">
   <h1> Артикулы успешно добавлены в БД. </h1>
+  <h3 th:text="'Всего артикулов: ' + ${articles.size()}"></h3>
   <table class="table table-striped table-hover align-top">
     <thead>
     <tr>

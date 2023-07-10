@@ -42,7 +42,7 @@ public class ArticleController {
                               @RequestParam String supportingDoc,
                               @RequestParam (required = false) MultipartFile file,
                               Model model) throws IOException {
-        return articleService.addArticle(article, description, code, supportingDoc, file, clientName);
+        return articleService.addArticle(article, description, code, supportingDoc, file, clientName, model);
     }
 
     @GetMapping("/articleDetails/{id}")

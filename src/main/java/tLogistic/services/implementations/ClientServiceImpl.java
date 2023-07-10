@@ -61,22 +61,25 @@ public class ClientServiceImpl implements ClientService {
         name = name.trim();
         description = description.trim();
         Optional<Client> optionalClient = clientRepository.findById(id);
-        if (optionalClient.isPresent()) {
-            Client client = optionalClient.get();
-            client.setName(name);
-            client.setDescription(description);
-            clientRepository.save(client);
-            return "articleAddOk";
+        if (optionalClient.isEmpty()) {
+            return "articleSearchError";
         }
-        return "articleSearchError";
+        Client client = optionalClient.get();
+        client.setName(name);
+        client.setDescription(description);
+        clientRepository.save(client);
+        model.addAttribute("title", "Детализация по контрагенту " + optionalClient.get().getName());
+        model.addAttribute("client", optionalClient.get());
+        return "clientDetails";
     }
 
     @Override
     public String findRemove(Long id, Model model) {
-        if (!clientRepository.existsById(id)) {
+        Optional<Client> optionalClient = clientRepository.findById(id);
+        if (optionalClient.isEmpty()) {
             return "clientSearchError";
         }
-        Client client = clientRepository.findById(id).get();
+        Client client = optionalClient.get();
         model.addAttribute("client", client);
         return "clientRemove";
     }
@@ -84,10 +87,11 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public String remove(Long id, String name, Model model) {
         name = name. trim();
-        if (!clientRepository.existsById(id)) {
+        Optional<Client> optionalClient = clientRepository.findById(id);
+        if (optionalClient.isEmpty()) {
             return "clientSearchError";
         }
-        Client client = clientRepository.findById(id).get();
+        Client client = optionalClient.get();
         if (client.getName().trim().equals(name)) {
             clientRepository.delete(client);
             return "articleAddOk";

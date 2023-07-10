@@ -7,7 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 
 public interface ArticleService {
-    String addArticle(String article, String description, String code, String supportingDoc, MultipartFile file, String clientName) throws IOException;
+    String addArticle(String article, String description, String code, String supportingDoc, MultipartFile file, String clientName, Model model) throws IOException;
 
     String edit(Long id, String description, String code, String supportingDoc, Model model, MultipartFile file) throws IOException;
 

@@ -14,13 +14,12 @@
     <h1>Добавление артикулов из файла .xlsx</h1><br>
     <span>Выберите файл с расширением <b>.xlsx</b>.</span><br>
     <span>Важно! Расположение столбцов в таблице должно быть: <b>Артикул--Описание--КодТНВЭД--Сопроводительные Документы</b>.</span><br>
-    <span>Рекомендуется скопировать только нужные ячейки в новый документ <b>.xlsx</b>, не копируя оглавление таблицы.</span><br>
+    <span>Рекомендуется копировать только нужные ячейки в новый документ <b>.xlsx</b>, не копируя оглавление таблицы.</span><br>
     <span>В файле не должны содержаться артикулы, которые уже имеются в БД.</span><br><br>
     <div>
         <img src="example.jpg"><br>
-    </div><br>
+    </div><br><br><br>
     <form action="/addArticleXLSX" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" class="btn btn-warning"><br><br>
         <select class="form-control" id="clients" name="clientId">
             <option value="" >Выберите контрагента</option>
             <option th:each="client : ${clients}"
@@ -28,6 +27,7 @@
                     th:text="${client.name}">
             </option>
         </select><br>
+        <input type="file" name="file" class="btn btn-warning"><br><br>
         <div>
             <button type="submit" class="btn btn-success mt-3">Добавить артикулы</button>
         </div>

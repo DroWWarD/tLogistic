@@ -10,7 +10,28 @@
 <body>
 <header th:insert="blocks/header :: header" class="p-3 text-bg-dark"></header>
 <div class="container mt-5 mb-5">
-  <h1>Следующие артикулы уже находятся в БД:</h1>
+  <h1>Ошибки при заполнении обязательных полей:</h1>
+  <h3 th:text="'Всего артикулов: ' + ${errors.size()}"></h3>
+  <table class="table table-striped table-hover align-top">
+    <thead>
+    <tr>
+      <th scope="col">Артикул</th>
+      <th scope="col">Описание</th>
+      <th scope="col">Код ТНВЭД</th>
+      <th scope="col">Сопроводительные документы</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr th:each="element : ${errors}">
+      <th th:text="${element.article}" scope="row"></th>
+      <td th:text="${element.description}"></td>
+      <td th:text="${element.code}"></td>
+      <td th:text="${element.supportingDoc}"></td>
+    </tr>
+    </tbody>
+  </table>
+  <br><br><h1>Следующие артикулы уже находятся в БД:</h1>
   <h3 th:text="'Всего артикулов: ' + ${articles.size()}"></h3>
   <table class="table table-striped table-hover align-top">
     <thead>
