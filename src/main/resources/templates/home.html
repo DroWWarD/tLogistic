@@ -1,5 +1,6 @@
 <!DOCTYPE HTML>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
 <head>
     <title>Главная</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
@@ -10,28 +11,12 @@
 <body>
 <header th:insert="blocks/header :: header" class="p-3 text-bg-dark"></header>
     <div class="container mt-5 mb-5">
-        <h1>Контрагенты</h1>
-        <table class="table table-striped table-hover align-top">
-            <thead>
-            <tr>
-                <th scope="col">Название контрагента</th>
-                <th scope="col">Описание</th>
-                <th scope="col">Дата добавления в БД</th>
-                <th scope="col">Детальнее</th>
-            </tr>
-            </thead>
-
-            <tbody>
-            <tr th:each="element : ${clients}">
-                <th th:text="${element.name}" scope="row"></th>
-                <td th:text="${element.description}"></td>
-                <td th:text="${element.dateOfCreated}"></td>
-                <td>
-                    <a th:href="'/clientDetails/' + ${element.id}" class="btn btn-warning">Детальнее</a>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+        <h3>Главная страница</h3><br>
+        <div>Для работы с БД потребуется ввести логин и пароль.</div>
+        <div>Пожелания для улучшения сервиса можете направить разработчикам через любой мессенджер или по телефонам,
+            будем рады помочь.</div><br>
+        <h3>Контакты разработчиков</h3>
+        <div>Дмитрий тел: +7(910)843-33-33</div>
     </div>
     <div th:insert="blocks/footer :: footer" id="footer"></div>
 </body>

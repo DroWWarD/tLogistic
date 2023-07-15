@@ -1,5 +1,6 @@
 <!DOCTYPE HTML>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
 <head>
     <title th:text="${title}"/>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
@@ -17,8 +18,8 @@
             <th scope="col">Название контрагента</th>
             <th scope="col">Описание</th>
             <th scope="col">Дата добавления в БД</th>
-            <th scope="col">Редактирование</th>
-            <th scope="col">Удаление</th>
+            <th sec:authorize="hasRole('ROLE_ADMIN')" scope="col">Редактирование</th>
+            <th sec:authorize="hasRole('ROLE_ADMIN')" scope="col">Удаление</th>
         </tr>
         </thead>
 
@@ -27,8 +28,8 @@
         <th th:text="${client.name}" scope="row"></th>
         <td th:text="${client.description}"></td>
         <td th:text="${client.dateOfCreated}"></td>
-        <td><a th:href="'/clientDetails/' + ${client.id} + '/edit'" class="btn btn-warning">Редактировать</a></td>
-        <td><a th:href="'/clientDetails/' + ${client.id} + '/remove'" class="btn btn-warning">Удалить</a></td>
+        <td sec:authorize="hasRole('ROLE_ADMIN')"><a th:href="'/clientDetails/' + ${client.id} + '/edit'" class="btn btn-warning">Редактировать</a></td>
+        <td sec:authorize="hasRole('ROLE_ADMIN')"><a th:href="'/clientDetails/' + ${client.id} + '/remove'" class="btn btn-warning">Удалить</a></td>
         </tbody>
     </table>
     <br>
