@@ -3,6 +3,7 @@ package tLogistic.controllers;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import tLogistic.models.Client;
 import tLogistic.services.ClientService;
 
 @Controller
@@ -12,7 +13,11 @@ public class ClientController {
     public ClientController(ClientService clientService) {
         this.clientService = clientService;
     }
+    @GetMapping("/clients")
+    public String showClients(Model model){
+        return clientService.showClients(model);
 
+    }
     @GetMapping("/addClient")
     public String addClient(Model model) {
         return "addClient";

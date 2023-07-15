@@ -14,4 +14,6 @@ public interface ClientService {
     String findRemove(Long id, Model model);
 
     String remove(Long id, String name, Model model);
+
+    String showClients(Model model);
 }

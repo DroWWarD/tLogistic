@@ -1,5 +1,6 @@
 <!DOCTYPE HTML>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
 <head>
     <title th:text="${title}"/>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
@@ -19,8 +20,8 @@
             <th scope="col">Код ТНВЭД</th>
             <th scope="col">Сопроводительные документы</th>
             <th scope="col">Дата добавления в БД</th>
-            <th scope="col">Редактирование</th>
-            <th scope="col">Удаление</th>
+            <th sec:authorize="hasRole('ROLE_ADMIN')" scope="col">Редактирование</th>
+            <th sec:authorize="hasRole('ROLE_ADMIN')" scope="col">Удаление</th>
         </tr>
         </thead>
         <tbody>
@@ -29,8 +30,8 @@
         <td th:text="${article.code}"></td>
         <td th:text="${article.supportingDoc}"></td>
         <td th:text="${article.dateOfCreated}"></td>
-        <td><a th:href="'/articleDetails/' + ${article.id} + '/edit'" class="btn btn-warning">Редактировать</a></td>
-        <td><a th:href="'/articleDetails/' + ${article.id} + '/remove'" class="btn btn-warning">Удалить</a></td>
+        <td sec:authorize="hasRole('ROLE_ADMIN')"><a th:href="'/articleDetails/' + ${article.id} + '/edit'" class="btn btn-warning">Редактировать</a></td>
+        <td sec:authorize="hasRole('ROLE_ADMIN')"><a th:href="'/articleDetails/' + ${article.id} + '/remove'" class="btn btn-warning">Удалить</a></td>
         </tbody>
     </table><br>
     <div>
