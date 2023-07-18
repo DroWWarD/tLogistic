@@ -166,14 +166,16 @@ public class ArticleServiceImpl implements ArticleService {
         }
         List<Article> articlesAddedToDB = new ArrayList<>();
         List<Article> articlesAlreadyInBase = new ArrayList<>();
+        List<Article> articlesDuplicatedInFile = new ArrayList<>();
         List<Article> errors = new ArrayList<>();
         Client client = optionalClient.get();
         try {
-            parseFileAndFillArticleLists(errors, articlesAddedToDB, articlesAlreadyInBase, client, file);
+            parseFileAndFillArticleLists(articlesDuplicatedInFile, errors, articlesAddedToDB, articlesAlreadyInBase, client, file);
         } catch (Exception e) {
             return "xlsxError";
         }
-        if (!articlesAlreadyInBase.isEmpty() || !errors.isEmpty()) {
+        if (!articlesAlreadyInBase.isEmpty() || !errors.isEmpty() || !articlesDuplicatedInFile.isEmpty()) {
+            model.addAttribute("duplicated", articlesDuplicatedInFile);
             model.addAttribute("articles", articlesAlreadyInBase);
             model.addAttribute("errors", errors);
             return "addArticleXLSXError";
@@ -183,7 +185,7 @@ public class ArticleServiceImpl implements ArticleService {
         return "addArticleXLSXOk";
     }
 
-    private void parseFileAndFillArticleLists(List<Article> errors, List<Article> articlesAddedToDB, List<Article> articlesAlreadyInBase, Client client, MultipartFile file) throws IOException {
+    private void parseFileAndFillArticleLists(List<Article> articlesDuplicatedInFile, List<Article> errors, List<Article> articlesAddedToDB, List<Article> articlesAlreadyInBase, Client client, MultipartFile file) throws IOException {
         File tempFile = File.createTempFile("searchResult", RandomString.make() + ".xlsx");
         file.transferTo(tempFile);
         tempFile.deleteOnExit();
@@ -192,6 +194,7 @@ public class ArticleServiceImpl implements ArticleService {
         rows = excelReader.read(String.valueOf(tempFile));
         Iterable<Article> articlesInBase = articleRepository.findAllByClient(client);
         Map<String, Article> articlesInBaseMap = new HashMap<>();
+        List<String> distinctArticles = new ArrayList<>();
         for (Article a : articlesInBase) {
             articlesInBaseMap.put(a.getArticle(), a);
         }
@@ -211,7 +214,12 @@ public class ArticleServiceImpl implements ArticleService {
                 errors.add(art);
                 continue;
             }
+            if (distinctArticles.contains(art.getArticle())){
+                articlesDuplicatedInFile.add(art);
+                continue;
+            }
             articlesAddedToDB.add(art);
+            distinctArticles.add(art.getArticle());
         }
     }
 
